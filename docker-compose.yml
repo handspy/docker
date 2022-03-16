@@ -1,0 +1,147 @@
+version: '2'
+services:
+  gateway:
+    image: handspy/gateway
+    environment:
+      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+      - 'SPRING_PROFILES_ACTIVE=prod,swagger'
+      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=false
+      - 'EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/eureka'
+      - 'SPRING_CLOUD_CONFIG_URI=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/config'
+      - JHIPSTER_SLEEP=30
+      - JHIPSTER_REGISTRY_PASSWORD=admin
+    ports:
+      - '8080:8080'
+    restart: always 
+
+  project:
+    image: handspy/project
+    environment:
+      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+      - 'SPRING_PROFILES_ACTIVE=prod,swagger'
+      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=false
+      - 'EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/eureka'
+      - 'SPRING_CLOUD_CONFIG_URI=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/config'
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://project-postgresql:5432/project'
+      - JHIPSTER_SLEEP=30
+      - JHIPSTER_REGISTRY_PASSWORD=admin
+    restart: always 
+  project-postgresql:
+    image: 'postgres:12.1'
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_USER=project
+      - POSTGRES_PASSWORD=
+    volumes:
+      - ./databases/project:/var/lib/postgresql/data/pgdata
+    restart: always 
+
+  sampling:
+    image: handspy/sampling
+    environment:
+      - _JAVA_OPTIONS=-Xmx1024m -Xms256m
+      - 'SPRING_PROFILES_ACTIVE=prod,swagger'
+      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=false
+      - 'EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/eureka'
+      - 'SPRING_CLOUD_CONFIG_URI=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/config'
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://sampling-postgresql:5432/sampling'
+      - JHIPSTER_SLEEP=30
+      - JHIPSTER_REGISTRY_PASSWORD=admin
+    volumes:
+      - ./databases/previews:/previews
+    restart: always 
+  sampling-postgresql:
+    image: 'postgres:12.1'
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_USER=sampling
+      - POSTGRES_PASSWORD=
+    volumes:
+      - ./databases/sampling:/var/lib/postgresql/data/pgdata
+    restart: always 
+
+  pbanalysis:
+    image: handspy/pbanalysis
+    environment:
+      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+      - 'SPRING_PROFILES_ACTIVE=prod,swagger'
+      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=false
+      - 'EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/eureka'
+      - 'SPRING_CLOUD_CONFIG_URI=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/config'
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://pbanalysis-postgresql:5432/pbanalysis'
+      - JHIPSTER_SLEEP=30
+      - JHIPSTER_REGISTRY_PASSWORD=admin
+    restart: always 
+  pbanalysis-postgresql:
+    image: 'postgres:12.1'
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_USER=pbanalysis
+      - POSTGRES_PASSWORD=
+    volumes:
+      - ./databases/pbanalysis:/var/lib/postgresql/data/pgdata
+    restart: always 
+
+  linguistics:
+    image: handspy/linguistics
+    environment:
+      - _JAVA_OPTIONS=-Xmx2048m -Xms512m
+      - 'SPRING_PROFILES_ACTIVE=prod,swagger'
+      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=false
+      - 'EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/eureka'
+      - 'SPRING_CLOUD_CONFIG_URI=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/config'
+      - 'SPRING_DATA_MONGODB_URI=mongodb://linguistics-mongodb:27017'
+      - SPRING_DATA_MONGODB_DATABASE=linguistics
+      - JHIPSTER_SLEEP=30
+      - JHIPSTER_REGISTRY_PASSWORD=admin
+    restart: always 
+  linguistics-mongodb:
+    image: 'mongo:4.2.7'
+    volumes:
+      - ./databases/linguistics:/data/db
+    restart: always 
+
+  uaa:
+    image: handspy/uaa
+    environment:
+      - _JAVA_OPTIONS=-Xmx512m -Xms256m
+      - 'SPRING_PROFILES_ACTIVE=prod,swagger'
+      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=false
+      - 'EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/eureka'
+      - 'SPRING_CLOUD_CONFIG_URI=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/config'
+      - 'SPRING_DATASOURCE_URL=jdbc:postgresql://uaa-postgresql:5432/uaa'
+      - JHIPSTER_SLEEP=30
+      - JHIPSTER_REGISTRY_PASSWORD=admin
+    restart: always 
+  uaa-postgresql:
+    image: 'postgres:12.1'
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_USER=uaa
+      - POSTGRES_PASSWORD=
+    volumes:
+      - ./databases/uaa:/var/lib/postgresql/data/pgdata
+    restart: always 
+
+  ui:
+    image: handspy/ui
+    volumes:
+      - ./nginx-conf/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - '4200:80'
+    restart: always 
+
+  jhipster-registry:
+    extends:
+      file: jhipster-registry.yml
+      service: jhipster-registry
+    restart: always
+    
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: always
+    ports:
+      - 1025:1025
+      - 8025:8025
+ 
+
